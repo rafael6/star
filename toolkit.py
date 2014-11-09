@@ -2,111 +2,129 @@
 
 __author__ = 'Rafael'
 
+import paramiko
 import re
 import socket
 import subprocess
+import telnetlib
 import urllib2
-import paramiko
+
 
 class Toolkit(object):
     """
-    Provides methods the following methods:
-        process_host() process a hostname list; returns DNS, loss, & latency
-        process_socket() process a hostname & port list; returns socket status
-        process_url() process an URL list; returns each URL status
+    Provides the following methods:
+        check_host() for DNS resolution and ICMP stats.
+        check_socket() for socket/service status checking.
+        check_url() for URL status code checking.
     """
 
-
-    def __init__(self, list1, list2=None, username=None, password=None):
-        self.list1 = list1
-        self.list2 = list2
+    def __init__(self, name, port=None, username=None, password=None):
+        self.name = name
+        self.port = port
         self.username = username
         self.password = password
 
-    def process_host(self):
-        """Iterate over a hosts list and calls method check_host with host as
-        argument.
-        """
-        for hostname in self.list1:
-            print self.check_host(hostname)
+    def check_host(self):
+        """Ping a given hostname (argument) with a load of 1450 data bytes four
+        times and returns DNS resolution and ICMP-related information such as
+        packet and latency counters."""
+        command = 'ping -c 4 -s 1450 ' + self.name
+        proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+        output = proc.communicate()
+        match = re.search(r'---(.*)', output[0], re.DOTALL)
 
-    def process_socket(self):
-        """Iterate over a host and port list and calls method check_socket and
-        call method check_socket with a hostname and a port as arguments.
-        """
-        for hostname in self.list1:
-            for port in self.list2:
-                print self.check_socket(hostname, port)
+        try:
+            return match.group()
+        except AttributeError:
+            return '\n!!!Unable to resolve %s; check its DNS!\n' % self.name
 
-    def process_url(self):
-        """Iterate over a URL list and call method check_url with an URL as an
-        argument."""
-        for url in self.list1:
-            print self.check_url(url)
-
-    def process_ssh(self):
-        """Iterate over a hosts and commands list and call method ssh with
-        a hostname, command, username, and password as arguments.
-         """
-        for hostname in self.list1:
-            for command in self.list2:
-                print self.ssh(hostname, command, self.username, self.password)
-
-    def check_host(self, name):
-            """Ping a given hostname four times, and return network-related
-            information such as packet loss and latency."""
-            command = 'ping -c 4 -s 1450 ' + name
-            proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
-            output = proc.communicate()
-            match = re.search(r'---(.*)', output[0], re.DOTALL)
-
-            try:
-                return match.group()
-            except AttributeError:
-                return '\n!!!Unable to resolve %s; check its DNS!\n' % self.name
-
-    def check_socket(self, name, port):
-        """Check status of a given socket (hostname and Port)."""
-
+    def check_socket(self):
+        """Check status of a given socket (hostname and port) (arguments) and
+        returns its connectivity status."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         try:
-            sock.connect((name, port))
+            sock.connect((self.name, self.port))
         except socket.error:
-            return '!!!Unable to connect to %s on port %s.' % (name, port)
+            return '!!!Unable to connect to %s on port %s.' % (self.name, self.port)
         else:
-            return 'Port %s is open on %s.' % (port, name)
+            return 'Port %s is open on %s.' % (self.port, self.name)
         finally:
             sock.close()
 
-    def check_url(self, name):
-        """Check the status of a given URL and returns its code."""
-
+    def check_url(self):
+        """Check the status of a given URL (argument) and returns its URL
+        status code."""
         try:
-            connection = urllib2.urlopen(name)
+            connection = urllib2.urlopen(self.name)
             code = connection.getcode()
         except urllib2.HTTPError as e:
-            return '!!!There is an http problem with %s. s%' % (name, e)
+            return '!!!There is an http problem with %s. s%' % (self.name, e)
         except urllib2.URLError as e:
-            return '!!!There is an URL problem with %s. s%' % (name, e)
+            return '!!!There is an URL problem with %s. s%' % (self.name, e)
+        except Exception as e:
+            return e
         else:
-            return 'URL %s returned a code of %s.' % (name, code)
+            return 'URL %s returned a code of %s.' % (self.name, code)
 
-    def ssh(self, node, command, username, password):
+
+class Connect():
+    """
+    Provides the following methods:
+        ssh() open an ssh channel with a given node and command processing.
+        telnet() open a telnet chanel with a given host and process commands.
+    """
+
+    def __init__(self, node, commands, username=None, password=None):
+        self.node = node
+        self.commands = commands
+        self.username = username
+        self.password = password
+
+    def ssh(self):
+        """Open an SSH channel with a given node (IP or hostname) and process
+        command(s) and its output. Takes a node, username, password, and a list
+        object containing the command(s)."""
         paramiko.util.log_to_file('paramiko.log')
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
-            client.connect(node, 22, username, password)
+            client.connect(self.node, 22, self.username, self.password)
         except socket.error:
-            return 'Node %s is not answering; check hostname or IP.' % node
+            return 'Node %s is not answering; check hostname or IP.' % self.node
         except paramiko.AuthenticationException:
             return 'Authentication failed; check username and password.'
         except KeyboardInterrupt:
             print '  Goodbye'
             exit()
         else:
-            stdin, stdout, stderr = client.exec_command(command)
-            print stdout.read()
+            for command in self.commands:
+                stdin, stdout, stderr = client.exec_command(command)
+                print stdout.read()
         finally:
             client.close()
+
+    def telnet(self):
+        """Open a telnet channel with a given node (IP or hostname) and process
+        command(s) and its output. Takes a node, username, password, and a list
+        object containing the command(s)."""
+
+        try:
+            tn = telnetlib.Telnet(self.node)
+            tn.read_until('login: ')
+            tn.write(self.username + '\n')
+            tn.read_until('Password: ')
+            tn.write(self.password + '\n')
+        except socket.error as e:
+            print 'Unable to connect to %s. %s' % (self.node, e)
+        except EOFError as e:
+            print 'Connection closed and no data from %s. %s' % (self.node, e)
+        except KeyboardInterrupt:
+            print '  Goodbye'
+            exit()
+        else:
+            for command in self.commands:
+                tn.write(command + '\n')
+                return tn.read_all()
+        finally:
+            tn.close()
