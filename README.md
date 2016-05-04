@@ -10,17 +10,22 @@ Below is a list of the capabilities to this point:
 3. Check services (socket) status. 
 4. Check URL status.
 
-Supporting modules:
-Module toolkit is the core of the program and contains methods for each capability.
-Module element is the interface for a particular system or application construct.
-Module system1 is a simple model or template for a particular system or application.
-Module index is the start of the program and it is useful when creating a collection of systems or applications.
+Modules:
+toolkit: the core of the program and contains methods for each of the four tools (capabilities). Module toolkit
+cosumes the following external modules:
+  dns.resolver
+  socket
+  subprocess
+  urllib.request
+
+element: The interface for a particular system or application construct. Module element comsumes module toolkit.
+
+SDcripts:
+system1: A simple sample or template for a particular system or application. Script system1 comsumes module
+element.
+index: The start of the program and it is useful when creating a collection of systems to be tested and documented. 
   
-External modules:
-import dns.resolver
-import socket
-import subprocess
-import urllib.request
+
 
 OS support:
 This module was written for any Linux distribution, but it also runs well in MacOS.
