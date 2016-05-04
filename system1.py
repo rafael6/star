@@ -1,49 +1,33 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-__author__ = 'Rafael'
-import getpass
-from toolkit import Connect
-from toolkit import Toolkit
-import time
+import element
+
+#  This a simple use case and serves as a template
 
 
 def main():
-    hostnames = ['google.com', 'yahoo.com']
-    urls = ['http://hg.secdev.org']
-    ports = [80, 443]
-    nodes = ['192.168.0.8', '192.168.186.1']
-    commands = ['whoami', 'ls']
+    # Variable definitions here:
+    resolvers = ['8.8.8.8']
+    query_type = 'A'
+    ports = (80, 443)
+    port_type = 'TCP'
+    urls = ('https://yahoo.com', 'http://yahoo.com')
 
-    print '>>>Running System Test; please wait...'
-    print '>>>Press Ctrl+C to exit.'
-    time.sleep(5)
+    # App title
+    print('Checking application my.app.com; please wait')
 
-    print '>>>Checking DNS and ICMP...'
-    print '>>>The average RTT should be less than 5ms with 0% packet loss.'
-    for hostname in hostnames:
-        tool = Toolkit(hostname)
-        print tool.check_host()
-
-    print '>>>Checking sockets...'
-    print '>>>All the sockets listed below should be open.'
-    for hostname in hostnames:
-        for port in ports:
-            tool = Toolkit(hostname, port)
-            print tool.check_socket()
-
-    print '>>>Checking URLs...'
-    print '>>>The the URLs listed below should return a 200 code.'
-    for url in urls:
-        tool = Toolkit(url)
-        print tool.check_url()
-
-    print '>>>SSH session...'
-    username = raw_input('Enter your username: ')
-    password = getpass.getpass()
-    for node in nodes:
-        connect = Connect(node, commands, username, password)
-        print connect.ssh()
+    # Element construct
+    element_ = 'yahoo.com'
+    print(element.get_element(element_))
+    print(element.get_etype('Web Server'))
+    print(element.get_dns(element_, resolvers, query_type))
+    print(element.get_ping(element_))
+    for port in element.get_socket(element_, ports, port_type):
+        print(port)
+    for url in element.get_url(urls):
+        print(url)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
+
