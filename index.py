@@ -1,37 +1,43 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-__author__ = 'Rafael'
+import system_1
+import system_2
+import system_3
 
-import system1
+
+index = {1: 'System-1',
+         2: 'System-2',
+         3: 'System-3'}
+
+intro = '''\nWelcome to System Tester and Reporter (STaR).\n
+Enter the number of the system you wish to test or Ctrl+C to exit:'''
 
 
 def main():
-    """Start point. List each system with a corresponding index/number as
-    options. Calls the appropriate system for testing."""
+    """ List a number of possibilities where each is a system test script."""
 
-    try:
-        print '''\nWelcome to System Tester and Reporter (STaR).
-        Enter a corresponding number from the options below or Ctr+C to exit:
-                1. System 1
-                2. System 2
-                3. System 3'''
+    while True:
+        try:
+            print(intro)
 
-        choice = raw_input('> ')
+            for k, v in sorted(index.items()):
+                print('\t', k, ': ', v, sep='')
 
-        if choice == '1':
-            system1.main()
-        elif choice == '2':
-            pass
-        elif choice == '3':
-            pass
-        else:
-            print '%s is not a valid selection, try again' % choice
-            main()
-    except KeyboardInterrupt:
-        print ' Thank you for using STaR.'
-    finally:
-        exit()
+            choice = int(input('\nEnter a number> '))
 
+            application = index.get(choice, 'Not a valid selection!')
+
+            if application == 'System-1':
+                system_1.main()
+            elif application == 'System-2':
+                system_2.main()
+            elif application == 'System-3':
+                sytem_3.main()
+            else:
+                print('\n'+application)
+                main()
+        except KeyboardInterrupt:
+            print('\n\nThank you for using STaR.')
 
 if __name__ == "__main__":
     main()
