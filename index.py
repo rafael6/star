@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import system_1
-import system_2
-import system_3
+import system1
+import system2
+import system3
 
 
 index = {1: 'System-1',
@@ -28,11 +28,11 @@ def main():
             application = index.get(choice, 'Not a valid selection!')
 
             if application == 'System-1':
-                system_1.main()
+                system1.main()
             elif application == 'System-2':
-                system_2.main()
+                system2.main()
             elif application == 'System-3':
-                sytem_3.main()
+                sytem3.main()
             else:
                 print('\n'+application)
                 main()
