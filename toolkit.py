@@ -101,8 +101,7 @@ class Connect():
             for command in self.commands:
                 stdin, stdout, stderr = client.exec_command(command)
                 print stdout.read()
-        finally:
-            client.close()
+
 
     def telnet(self):
         """Open a telnet channel with a given node (IP or hostname) and process
